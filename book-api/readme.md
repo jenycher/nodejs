@@ -1,5 +1,3 @@
-Создаю для вас файл `README.md` для GitHub:
-
 ```markdown
 # Book API 📚
 
