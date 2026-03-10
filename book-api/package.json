@@ -1,18 +1,27 @@
 {
   "name": "book-api",
-  "version": "1.0.0",
-  "description": "CRUD API для книг",
+  "version": "1.0.1",
+  "description": "CRUD API для книг с загрузкой файлов",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js"
+    "dev": "nodemon index.js"
   },
-  "keywords": ["express","api","crud"],
+  "keywords": [
+    "express",
+    "api",
+    "crud",
+    "multer"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
+    "multer": "^1.4.5-lts.1",
     "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
   }
 }
