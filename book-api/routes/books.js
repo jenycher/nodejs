@@ -3,29 +3,19 @@ const { v4: uuid } = require('uuid');
 const upload = require('../middleware/upload');
 const path = require('path');
 const fs = require('fs');
+const storage = require('../storage');
 
 const router = express.Router();
 
-// Хранилище данных
-const store = {
-    books: []
-};
-
-// Вспомогательная функция для поиска книги
-const findBookById = (id) => {
-    const book = store.books.find(book => book.id === id);
-    return { book, index: store.books.findIndex(book => book.id === id) };
-};
-
 // GET /api/books - получить все книги
 router.get('/', (req, res) => {
-    res.json(store.books);
+    res.json(storage.getBooks());
 });
 
 // GET /api/books/:id - получить книгу по ID
 router.get('/:id', (req, res) => {
     const { id } = req.params;
-    const { book } = findBookById(id);
+    const book = storage.getBookById(id);
     
     if (book) {
         res.json(book);
@@ -37,7 +27,7 @@ router.get('/:id', (req, res) => {
 // GET /api/books/:id/download - скачать файл книги
 router.get('/:id/download', (req, res) => {
     const { id } = req.params;
-    const { book } = findBookById(id);
+    const book = storage.getBookById(id);
     
     if (!book || !book.fileBook) {
         return res.status(404).json({ message: "Файл книги не найден" });
@@ -45,9 +35,18 @@ router.get('/:id/download', (req, res) => {
 
     const filePath = path.join(__dirname, '..', 'public', 'books', book.fileBook);
     
-    // Проверяем существование файла
     if (fs.existsSync(filePath)) {
-        res.download(filePath, book.fileName || 'book.pdf', (err) => {
+        let fileName = book.fileName || book.fileBook;
+        try {
+            fileName = decodeURIComponent(escape(fileName));
+        } catch (e) {
+            try {
+                fileName = decodeURIComponent(fileName);
+            } catch (e2) {}
+        }
+        
+        res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`);
+        res.download(filePath, fileName, (err) => {
             if (err) {
                 console.error('Ошибка при скачивании:', err);
                 res.status(500).json({ message: "Ошибка при скачивании файла" });
@@ -58,7 +57,7 @@ router.get('/:id/download', (req, res) => {
     }
 });
 
-// POST /api/books - создать книгу (с загрузкой файлов)
+// POST /api/books - создать книгу
 router.post('/', upload.fields([
     { name: 'fileCover', maxCount: 1 },
     { name: 'fileBook', maxCount: 1 }
@@ -76,23 +75,37 @@ router.post('/', upload.fields([
         fileBook: req.files?.fileBook?.[0]?.filename || ""
     };
     
-    store.books.push(newBook);
+    storage.addBook(newBook);
     res.status(201).json(newBook);
 });
 
-// PUT /api/books/:id - редактировать книгу
+// PUT /api/books/:id - обновить книгу
 router.put('/:id', upload.fields([
     { name: 'fileCover', maxCount: 1 },
     { name: 'fileBook', maxCount: 1 }
 ]), (req, res) => {
     const { id } = req.params;
-    const { book, index } = findBookById(id);
+    const book = storage.getBookById(id);
     
     if (book) {
         const { title, description, authors, favorite } = req.body;
         
-        store.books[index] = {
-            ...book,
+        // Удаляем старые файлы, если загружены новые
+        if (req.files?.fileCover?.[0] && book.fileCover) {
+            const oldCoverPath = path.join(__dirname, '..', 'public', 'img', book.fileCover);
+            if (fs.existsSync(oldCoverPath)) {
+                fs.unlinkSync(oldCoverPath);
+            }
+        }
+        
+        if (req.files?.fileBook?.[0] && book.fileBook) {
+            const oldBookPath = path.join(__dirname, '..', 'public', 'books', book.fileBook);
+            if (fs.existsSync(oldBookPath)) {
+                fs.unlinkSync(oldBookPath);
+            }
+        }
+        
+        const updatedBook = storage.updateBook(id, {
             title: title !== undefined ? title : book.title,
             description: description !== undefined ? description : book.description,
             authors: authors !== undefined ? authors : book.authors,
@@ -100,9 +113,9 @@ router.put('/:id', upload.fields([
             fileCover: req.files?.fileCover?.[0]?.filename || book.fileCover,
             fileName: req.files?.fileBook?.[0]?.originalname || book.fileName,
             fileBook: req.files?.fileBook?.[0]?.filename || book.fileBook
-        };
+        });
         
-        res.json(store.books[index]);
+        res.json(updatedBook);
     } else {
         res.status(404).json({ message: "Книга не найдена" });
     }
@@ -111,7 +124,7 @@ router.put('/:id', upload.fields([
 // DELETE /api/books/:id - удалить книгу
 router.delete('/:id', (req, res) => {
     const { id } = req.params;
-    const { book, index } = findBookById(id);
+    const book = storage.getBookById(id);
     
     if (book) {
         // Удаляем файлы книги
@@ -128,7 +141,7 @@ router.delete('/:id', (req, res) => {
             }
         }
         
-        store.books.splice(index, 1);
+        storage.deleteBook(id);
         res.json('ok');
     } else {
         res.status(404).json({ message: "Книга не найдена" });

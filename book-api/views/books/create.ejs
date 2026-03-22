@@ -1,0 +1,874 @@
+<%
+title = 'Добавить новую книгу';
+%>
+
+<div class="create-book-container">
+    <div class="create-book-header">
+        <a href="/books" class="back-link">← Назад к списку</a>
+        <h1>✨ Создать новую книгу</h1>
+        <p class="header-description">Заполните информацию о книге и загрузите необходимые файлы</p>
+    </div>
+    
+    <form action="/books" method="POST" enctype="multipart/form-data" class="create-book-form" id="createBookForm">
+        <div class="form-grid">
+            <!-- Левая колонка - основные поля -->
+            <div class="form-main">
+                <div class="form-section">
+                    <h3>📖 Основная информация</h3>
+                    
+                    <div class="form-group">
+                        <label for="title">
+                            <span class="label-icon">📖</span>
+                            Название книги
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" id="title" name="title" required 
+                               value="<%= formData ? formData.title : '' %>" 
+                               placeholder="Введите название книги"
+                               class="form-input"
+                               autofocus>
+                        <div class="field-hint">
+                            <span class="hint-icon">ℹ️</span>
+                            Обязательное поле. Название должно быть уникальным
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="authors">
+                            <span class="label-icon">✍️</span>
+                            Автор(ы)
+                        </label>
+                        <input type="text" id="authors" name="authors" 
+                               value="<%= formData ? formData.authors : '' %>" 
+                               placeholder="Например: Лев Толстой, Федор Достоевский"
+                               class="form-input">
+                        <div class="field-hint">
+                            <span class="hint-icon">💡</span>
+                            Если авторов несколько, укажите их через запятую
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">
+                            <span class="label-icon">📝</span>
+                            Описание
+                        </label>
+                        <textarea id="description" name="description" 
+                                  placeholder="Введите описание книги. Расскажите о сюжете, главных героях, интересных фактах..."
+                                  class="form-textarea"><%= formData ? formData.description : '' %></textarea>
+                        <div class="field-hint">
+                            <span class="hint-icon">📋</span>
+                            Подробное описание поможет читателям лучше понять содержание книги
+                        </div>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="favorite" value="true" <%= (formData && formData.favorite === 'true') ? 'checked' : '' %>>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">
+                                <span class="label-icon">⭐</span>
+                                Добавить в избранное
+                            </span>
+                        </label>
+                        <div class="field-hint">
+                            <span class="hint-icon">❤️</span>
+                            Избранные книги будут отображаться с отметкой и могут быть выделены в списке
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Бонус: подсказки для заполнения -->
+                <div class="tips-section">
+                    <div class="tips-header">
+                        <span class="tips-icon">💡</span>
+                        <span>Советы по заполнению</span>
+                    </div>
+                    <ul class="tips-list">
+                        <li>Используйте полное название книги, включая подзаголовок, если он есть</li>
+                        <li>Для авторов укажите фамилию и инициалы в общепринятом формате</li>
+                        <li>В описании укажите жанр, год издания и основную идею книги</li>
+                        <li>Загружайте файлы в популярных форматах для лучшей совместимости</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Правая колонка - файлы -->
+            <div class="form-files">
+                <div class="form-section">
+                    <h3>🖼️ Обложка книги</h3>
+                    
+                    <div class="file-upload-area" id="coverUploadArea">
+                        <label for="fileCover" class="file-upload-label">
+                            <div class="upload-icon">📁</div>
+                            <div class="upload-text">
+                                <strong>Выберите обложку</strong>
+                                <span>или перетащите файл сюда</span>
+                            </div>
+                            <input type="file" id="fileCover" name="fileCover" accept="image/*" class="file-input" onchange="previewCover(this)">
+                        </label>
+                        <div class="field-hint">
+                            <span class="hint-icon">🖼️</span>
+                            <strong>Допустимые форматы:</strong> JPEG, PNG, GIF, WEBP<br>
+                            <strong>Рекомендуемый размер:</strong> до 2 MB
+                        </div>
+                    </div>
+                    
+                    <div id="coverPreview" class="cover-preview-area" style="display: none;">
+                        <div class="preview-header">
+                            <span class="preview-icon">✅</span>
+                            <span>Предпросмотр обложки</span>
+                            <button type="button" class="remove-file" onclick="removeCover()">✖</button>
+                        </div>
+                        <div class="preview-content">
+                            <img id="coverPreviewImage" src="" alt="Предпросмотр обложки">
+                            <div class="preview-info">
+                                <div class="preview-filename" id="coverFilename"></div>
+                                <div class="preview-filesize" id="coverFilesize"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>📚 Файл книги</h3>
+                    
+                    <div class="file-upload-area" id="bookUploadArea">
+                        <label for="fileBook" class="file-upload-label">
+                            <div class="upload-icon">📂</div>
+                            <div class="upload-text">
+                                <strong>Выберите файл книги</strong>
+                                <span>или перетащите файл сюда</span>
+                            </div>
+                            <input type="file" id="fileBook" name="fileBook" accept=".pdf,.doc,.docx,.txt,.fb2,.epub" class="file-input" onchange="previewBook(this)">
+                        </label>
+                        <div class="field-hint">
+                            <span class="hint-icon">📄</span>
+                            <strong>Допустимые форматы:</strong> PDF, DOC, DOCX, TXT, FB2, EPUB<br>
+                            <strong>Максимальный размер:</strong> 50 MB
+                        </div>
+                    </div>
+                    
+                    <div id="bookPreview" class="file-preview-area" style="display: none;">
+                        <div class="preview-header">
+                            <span class="preview-icon">✅</span>
+                            <span>Выбранный файл</span>
+                            <button type="button" class="remove-file" onclick="removeBook()">✖</button>
+                        </div>
+                        <div class="preview-content file-preview">
+                            <div class="file-type-icon" id="bookTypeIcon"></div>
+                            <div class="preview-info">
+                                <div class="preview-filename" id="bookFilename"></div>
+                                <div class="preview-filesize" id="bookFilesize"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-box-header">
+                        <span class="info-icon">ℹ️</span>
+                        <span>Важная информация</span>
+                    </div>
+                    <div class="info-box-content">
+                        <p>После создания книги вы сможете:</p>
+                        <ul>
+                            <li>Редактировать информацию</li>
+                            <li>Заменять файлы</li>
+                            <li>Удалять книгу</li>
+                            <li>Скачивать файлы</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span class="btn-icon">✨</span>
+                Создать книгу
+            </button>
+            <button type="reset" class="btn-reset" onclick="resetForm()">
+                <span class="btn-icon">🔄</span>
+                Очистить форму
+            </button>
+            <a href="/books" class="btn-cancel">
+                <span class="btn-icon">❌</span>
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function previewCover(input) {
+        const previewArea = document.getElementById('coverPreview');
+        const uploadArea = document.getElementById('coverUploadArea');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            const file = input.files[0];
+            
+            reader.onload = function(e) {
+                document.getElementById('coverPreviewImage').src = e.target.result;
+                document.getElementById('coverFilename').textContent = file.name;
+                document.getElementById('coverFilesize').textContent = formatFileSize(file.size);
+                
+                previewArea.style.display = 'block';
+                uploadArea.style.opacity = '0.6';
+            }
+            
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    function removeCover() {
+        const coverInput = document.getElementById('fileCover');
+        const previewArea = document.getElementById('coverPreview');
+        const uploadArea = document.getElementById('coverUploadArea');
+        
+        coverInput.value = '';
+        previewArea.style.display = 'none';
+        uploadArea.style.opacity = '1';
+    }
+    
+    function previewBook(input) {
+        const previewArea = document.getElementById('bookPreview');
+        const uploadArea = document.getElementById('bookUploadArea');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const fileExt = file.name.split('.').pop().toUpperCase();
+            
+            document.getElementById('bookFilename').textContent = file.name;
+            document.getElementById('bookFilesize').textContent = formatFileSize(file.size);
+            
+            // Устанавливаем иконку в зависимости от типа файла
+            const typeIcon = document.getElementById('bookTypeIcon');
+            const iconMap = {
+                'PDF': '📕',
+                'DOC': '📘',
+                'DOCX': '📘',
+                'TXT': '📄',
+                'FB2': '📗',
+                'EPUB': '📙'
+            };
+            typeIcon.textContent = iconMap[fileExt] || '📚';
+            
+            previewArea.style.display = 'block';
+            uploadArea.style.opacity = '0.6';
+        }
+    }
+    
+    function removeBook() {
+        const bookInput = document.getElementById('fileBook');
+        const previewArea = document.getElementById('bookPreview');
+        const uploadArea = document.getElementById('bookUploadArea');
+        
+        bookInput.value = '';
+        previewArea.style.display = 'none';
+        uploadArea.style.opacity = '1';
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    function resetForm() {
+        if (confirm('Вы уверены, что хотите очистить все поля?')) {
+            document.getElementById('createBookForm').reset();
+            removeCover();
+            removeBook();
+        }
+    }
+    
+    // Drag and drop функциональность
+    const coverDropZone = document.getElementById('coverUploadArea');
+    const bookDropZone = document.getElementById('bookUploadArea');
+    
+    function setupDragAndDrop(dropZone, inputId, previewFunc) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            dropZone.classList.add('drag-over');
+        }
+        
+        function unhighlight(e) {
+            dropZone.classList.remove('drag-over');
+        }
+        
+        dropZone.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const fileInput = document.getElementById(inputId);
+            
+            fileInput.files = files;
+            
+            // Триггерим событие change для предпросмотра
+            const event = new Event('change', { bubbles: true });
+            fileInput.dispatchEvent(event);
+            
+            // Вызываем функцию предпросмотра
+            if (previewFunc === 'cover') {
+                previewCover(fileInput);
+            } else if (previewFunc === 'book') {
+                previewBook(fileInput);
+            }
+        }
+    }
+    
+    setupDragAndDrop(coverDropZone, 'fileCover', 'cover');
+    setupDragAndDrop(bookDropZone, 'fileBook', 'book');
+    
+    // Валидация формы перед отправкой
+    document.getElementById('createBookForm').addEventListener('submit', function(e) {
+        const title = document.getElementById('title').value.trim();
+        
+        if (!title) {
+            e.preventDefault();
+            alert('Пожалуйста, введите название книги');
+            document.getElementById('title').focus();
+            return false;
+        }
+        
+        // Показываем индикатор загрузки
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.innerHTML = '<span class="btn-icon">⏳</span> Создание...';
+        submitBtn.disabled = true;
+        
+        return true;
+    });
+</script>
+
+<style>
+    .create-book-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 0;
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .create-book-header {
+        margin-bottom: 2rem;
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        color: #667eea;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+    
+    .back-link:hover {
+        color: #764ba2;
+        transform: translateX(-3px);
+    }
+    
+    .create-book-header h1 {
+        font-size: 2rem;
+        color: #2d3748;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .header-description {
+        color: #718096;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.2s;
+    }
+    
+    .form-section:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    
+    .form-section h3 {
+        font-size: 1.2rem;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .label-icon {
+        font-size: 1.1rem;
+    }
+    
+    .required {
+        color: #e53e3e;
+        margin-left: 0.25rem;
+    }
+    
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+    
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .field-hint {
+        font-size: 0.8rem;
+        color: #718096;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.25rem;
+        line-height: 1.4;
+    }
+    
+    .hint-icon {
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    
+    .checkbox-group {
+        margin-top: 1rem;
+    }
+    
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        font-weight: normal;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        display: none;
+    }
+    
+    .checkbox-custom {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #cbd5e0;
+        border-radius: 4px;
+        position: relative;
+        transition: all 0.2s;
+    }
+    
+    .checkbox-label input[type="checkbox"]:checked + .checkbox-custom {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .checkbox-label input[type="checkbox"]:checked + .checkbox-custom:after {
+        content: "✓";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+    }
+    
+    .checkbox-text {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .tips-section {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .tips-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .tips-icon {
+        font-size: 1.2rem;
+    }
+    
+    .tips-list {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: #78350f;
+    }
+    
+    .tips-list li {
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+    
+    .file-upload-area {
+        margin-bottom: 1rem;
+        transition: opacity 0.2s;
+    }
+    
+    .file-upload-label {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fafafa;
+    }
+    
+    .file-upload-label:hover {
+        border-color: #667eea;
+        background: #f7fafc;
+        transform: translateY(-2px);
+    }
+    
+    .drag-over {
+        border-color: #667eea;
+        background: #edf2f7;
+        transform: scale(1.02);
+    }
+    
+    .upload-icon {
+        font-size: 2rem;
+    }
+    
+    .upload-text {
+        flex: 1;
+    }
+    
+    .upload-text strong {
+        display: block;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+    }
+    
+    .upload-text span {
+        font-size: 0.85rem;
+        color: #718096;
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .cover-preview-area,
+    .file-preview-area {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        border: 1px solid #e2e8f0;
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .preview-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+        font-weight: 500;
+        color: #2d3748;
+    }
+    
+    .preview-icon {
+        font-size: 1rem;
+    }
+    
+    .remove-file {
+        margin-left: auto;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        color: #e53e3e;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    
+    .remove-file:hover {
+        background: #fed7d7;
+        transform: scale(1.1);
+    }
+    
+    .preview-content {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    #coverPreviewImage {
+        max-width: 100px;
+        max-height: 140px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .file-preview {
+        align-items: center;
+    }
+    
+    .file-type-icon {
+        font-size: 2rem;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e2e8f0;
+        border-radius: 8px;
+    }
+    
+    .preview-info {
+        flex: 1;
+    }
+    
+    .preview-filename {
+        font-weight: 500;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+        word-break: break-all;
+    }
+    
+    .preview-filesize {
+        font-size: 0.8rem;
+        color: #718096;
+    }
+    
+    .info-box {
+        background: #e6f7ff;
+        border-left: 4px solid #1890ff;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .info-box-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #0050b3;
+        margin-bottom: 0.75rem;
+    }
+    
+    .info-icon {
+        font-size: 1.1rem;
+    }
+    
+    .info-box-content {
+        color: #0050b3;
+        font-size: 0.85rem;
+    }
+    
+    .info-box-content p {
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .info-box-content ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+    
+    .info-box-content li {
+        margin-bottom: 0.25rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .btn-submit,
+    .btn-reset,
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-submit:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .btn-reset {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-reset:hover {
+        background: #cbd5e0;
+        transform: translateY(-2px);
+    }
+    
+    .btn-cancel {
+        background: white;
+        color: #e53e3e;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .btn-cancel:hover {
+        background: #fff5f5;
+        border-color: #e53e3e;
+        transform: translateY(-2px);
+    }
+    
+    .btn-icon {
+        font-size: 1rem;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 1024px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .create-book-container {
+            padding: 1rem;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-submit,
+        .btn-reset,
+        .btn-cancel {
+            justify-content: center;
+        }
+        
+        .preview-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        #coverPreviewImage {
+            max-width: 100%;
+            height: auto;
+        }
+    }
+</style>

@@ -1,0 +1,630 @@
+<%
+title = 'Редактировать книгу: ' + book.title;
+%>
+
+<div class="edit-book-container">
+    <div class="edit-book-header">
+        <a href="/books" class="back-link">← Назад к списку</a>
+        <h1>✏️ Редактировать книгу</h1>
+    </div>
+    
+    <form action="/books/<%= book.id %>/update" method="POST" enctype="multipart/form-data" class="edit-book-form">
+        <div class="form-grid">
+            <!-- Левая колонка - основные поля -->
+            <div class="form-main">
+                <div class="form-section">
+                    <h3>Основная информация</h3>
+                    
+                    <div class="form-group">
+                        <label for="title">
+                            <span class="label-icon">📖</span>
+                            Название книги
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" id="title" name="title" required 
+                               value="<%= book.title %>" 
+                               placeholder="Введите название книги"
+                               class="form-input">
+                        <div class="field-hint">Обязательное поле</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="authors">
+                            <span class="label-icon">✍️</span>
+                            Автор(ы)
+                        </label>
+                        <input type="text" id="authors" name="authors" 
+                               value="<%= book.authors %>" 
+                               placeholder="Например: Лев Толстой, Федор Достоевский"
+                               class="form-input">
+                        <div class="field-hint">Укажите одного или нескольких авторов</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">
+                            <span class="label-icon">📝</span>
+                            Описание
+                        </label>
+                        <textarea id="description" name="description" 
+                                  placeholder="Введите описание книги..."
+                                  class="form-textarea"><%= book.description %></textarea>
+                        <div class="field-hint">Краткое описание содержания книги</div>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="favorite" value="true" <%= book.favorite ? 'checked' : '' %>>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">
+                                <span class="label-icon">⭐</span>
+                                Добавить в избранное
+                            </span>
+                        </label>
+                        <div class="field-hint">Избранные книги будут отмечены звездочкой</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Правая колонка - файлы -->
+            <div class="form-files">
+                <div class="form-section">
+                    <h3>Обложка книги</h3>
+                    
+                    <% if (book.fileCover && coverInfo.exists) { %>
+                        <div class="current-file">
+                            <div class="current-file-header">
+                                <span class="file-icon">🖼️</span>
+                                <span>Текущая обложка</span>
+                            </div>
+                            <div class="current-cover">
+                                <img src="/public/img/<%= book.fileCover %>" alt="Обложка книги" class="cover-preview">
+                                <div class="file-info">
+                                    <div class="file-name"><%= coverInfo.displayName || book.displayCoverName || book.fileCover %></div>
+                                    <div class="file-size">📦 <%= coverInfo.size %></div>
+                                </div>
+                            </div>
+                        </div>
+                    <% } else if (book.fileCover && !coverInfo.exists) { %>
+                        <div class="current-file error">
+                            <div class="current-file-header">
+                                <span class="file-icon">⚠️</span>
+                                <span>Файл обложки не найден</span>
+                            </div>
+                            <div class="file-info">
+                                <div class="file-name"><%= bookFileInfo.displayName || book.displayFileName || book.fileName || book.fileBook %></div>
+                                <div class="file-error">Файл отсутствует на сервере</div>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="no-file">
+                            <div class="no-file-icon">📷</div>
+                            <div class="no-file-text">Обложка не загружена</div>
+                        </div>
+                    <% } %>
+                    
+                    <div class="file-upload-area">
+                        <label for="fileCover" class="file-upload-label">
+                            <div class="upload-icon">📁</div>
+                            <div class="upload-text">
+                                <strong>Выберите новую обложку</strong>
+                                <span>или перетащите файл сюда</span>
+                            </div>
+                            <input type="file" id="fileCover" name="fileCover" accept="image/*" class="file-input">
+                        </label>
+                        <div class="field-hint">
+                            <span class="hint-icon">ℹ️</span>
+                            Оставьте пустым, чтобы сохранить текущую обложку<br>
+                            <strong>Допустимые форматы:</strong> JPEG, PNG, GIF, WEBP
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Файл книги</h3>
+                    
+                    <% if (book.fileBook && bookFileInfo.exists) { %>
+                        <div class="current-file">
+                            <div class="current-file-header">
+                                <span class="file-icon">📄</span>
+                                <span>Текущий файл</span>
+                            </div>
+                            <div class="current-book-file">
+                                <div class="file-type-badge">
+                                    <%= bookFileInfo.extension %>
+                                </div>
+                                <div class="file-info">
+                                    <div class="file-name"><%= decodeURIComponent(book.fileName || book.fileBook) %></div>
+                                    <div class="file-meta">
+                                        <span class="file-size">📦 <%= bookFileInfo.size %></span>
+                                        <span class="file-separator">•</span>
+                                        <span class="file-date">📅 <%= bookFileInfo.date %></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% } else if (book.fileBook && !bookFileInfo.exists) { %>
+                        <div class="current-file error">
+                            <div class="current-file-header">
+                                <span class="file-icon">⚠️</span>
+                                <span>Файл книги не найден</span>
+                            </div>
+                            <div class="file-info">
+                                <div class="file-name"><%= decodeURIComponent(book.fileName || book.fileBook) %></div>
+                                <div class="file-error">Файл отсутствует на сервере</div>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="no-file">
+                            <div class="no-file-icon">📚</div>
+                            <div class="no-file-text">Файл книги не загружен</div>
+                        </div>
+                    <% } %>
+                    
+                    <div class="file-upload-area">
+                        <label for="fileBook" class="file-upload-label">
+                            <div class="upload-icon">📂</div>
+                            <div class="upload-text">
+                                <strong>Выберите новый файл</strong>
+                                <span>или перетащите файл сюда</span>
+                            </div>
+                            <input type="file" id="fileBook" name="fileBook" accept=".pdf,.doc,.docx,.txt,.fb2,.epub" class="file-input">
+                        </label>
+                        <div class="field-hint">
+                            <span class="hint-icon">ℹ️</span>
+                            Оставьте пустым, чтобы сохранить текущий файл<br>
+                            <strong>Допустимые форматы:</strong> PDF, DOC, DOCX, TXT, FB2, EPUB<br>
+                            <strong>Максимальный размер:</strong> 50 MB
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">
+                <span class="btn-icon">💾</span>
+                Сохранить изменения
+            </button>
+            <a href="/books/<%= book.id %>" class="btn-cancel">
+                <span class="btn-icon">❌</span>
+                Отмена
+            </a>
+            <a href="/books" class="btn-secondary">
+                <span class="btn-icon">📚</span>
+                К списку книг
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .edit-book-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 0;
+    }
+    
+    .edit-book-header {
+        margin-bottom: 2rem;
+    }
+    
+    .back-link {
+        display: inline-block;
+        margin-bottom: 1rem;
+        color: #667eea;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+    
+    .back-link:hover {
+        color: #764ba2;
+        transform: translateX(-3px);
+    }
+    
+    .edit-book-header h1 {
+        font-size: 2rem;
+        color: #2d3748;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: box-shadow 0.2s;
+    }
+    
+    .form-section:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    
+    .form-section h3 {
+        font-size: 1.2rem;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-section h3:before {
+        content: "•";
+        color: #667eea;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .label-icon {
+        font-size: 1.1rem;
+    }
+    
+    .required {
+        color: #e53e3e;
+        margin-left: 0.25rem;
+    }
+    
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+    
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .field-hint {
+        font-size: 0.8rem;
+        color: #718096;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .hint-icon {
+        font-size: 0.9rem;
+    }
+    
+    .checkbox-group {
+        margin-top: 1rem;
+    }
+    
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        font-weight: normal;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        display: none;
+    }
+    
+    .checkbox-custom {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #cbd5e0;
+        border-radius: 4px;
+        position: relative;
+        transition: all 0.2s;
+    }
+    
+    .checkbox-label input[type="checkbox"]:checked + .checkbox-custom {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .checkbox-label input[type="checkbox"]:checked + .checkbox-custom:after {
+        content: "✓";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+    }
+    
+    .checkbox-text {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .current-file {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .current-file.error {
+        background: #fff5f5;
+        border-color: #feb2b2;
+    }
+    
+    .current-file-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .file-icon {
+        font-size: 1.1rem;
+    }
+    
+    .current-cover {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .cover-preview {
+        max-width: 120px;
+        max-height: 160px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .current-book-file {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .file-type-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        min-width: 80px;
+        text-align: center;
+    }
+    
+    .file-info {
+        flex: 1;
+    }
+    
+    .file-name {
+        font-weight: 500;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+        word-break: break-all;
+    }
+    
+    .file-size, .file-date {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.8rem;
+        color: #718096;
+    }
+    
+    .file-error {
+        color: #e53e3e;
+        font-size: 0.8rem;
+    }
+    
+    .file-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .file-separator {
+        color: #cbd5e0;
+    }
+    
+    .no-file {
+        background: #f7fafc;
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .no-file-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .no-file-text {
+        color: #718096;
+        font-size: 0.9rem;
+    }
+    
+    .file-upload-area {
+        margin-top: 1rem;
+    }
+    
+    .file-upload-label {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fafafa;
+    }
+    
+    .file-upload-label:hover {
+        border-color: #667eea;
+        background: #f7fafc;
+    }
+    
+    .upload-icon {
+        font-size: 2rem;
+    }
+    
+    .upload-text {
+        flex: 1;
+    }
+    
+    .upload-text strong {
+        display: block;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+    }
+    
+    .upload-text span {
+        font-size: 0.85rem;
+        color: #718096;
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .btn-submit,
+    .btn-cancel,
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-cancel {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-cancel:hover {
+        background: #cbd5e0;
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background: white;
+        color: #667eea;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .btn-secondary:hover {
+        background: #f7fafc;
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+    
+    .btn-icon {
+        font-size: 1rem;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 1024px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .edit-book-container {
+            padding: 1rem;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-submit,
+        .btn-cancel,
+        .btn-secondary {
+            justify-content: center;
+        }
+        
+        .current-cover,
+        .current-book-file {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .cover-preview {
+            max-width: 100%;
+            height: auto;
+        }
+    }
+</style>

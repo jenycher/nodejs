@@ -1,0 +1,52 @@
+[
+  {
+    "id": "9df5c501-429c-4549-8cf4-3a2fb0a1a6ef",
+    "title": "Война и мир",
+    "description": "Роман-эпопея Льва Толстого о жизни русского общества в эпоху наполеоновских войн.",
+    "authors": "Лев Толстой",
+    "favorite": true,
+    "fileCover": "obl1.jpg",
+    "fileName": "book1.txt",
+    "fileBook": "book1.txt"
+  },
+  {
+    "id": "c4f7a2fb-5308-4aec-934f-11def07abbd1",
+    "title": "Преступление и наказание",
+    "description": "Роман Федора Достоевского о моральных дилеммах и психологии преступника.",
+    "authors": "Федор Достоевский",
+    "favorite": false,
+    "fileCover": "obl2.jpg",
+    "fileName": "book2.txt",
+    "fileBook": "book2.txt"
+  },
+  {
+    "id": "820edf56-3345-438f-96da-5413859962bb",
+    "title": "Мастер и Маргарита",
+    "description": "Роман Михаила Булгакова, сочетающий сатиру, философию и мистику.",
+    "authors": "Михаил Булгаков",
+    "favorite": true,
+    "fileCover": "obl3.jpg",
+    "fileName": "book3.txt",
+    "fileBook": "book3.txt"
+  },
+  {
+    "id": "b66614e9-c8f4-4d3b-a392-265de0cae215",
+    "title": "2 Война и мир - обновление",
+    "description": "Классический роман Льва Толстого о войне 1812 года",
+    "authors": "2 Лев Толстой",
+    "favorite": true,
+    "fileCover": "1774195336203-bec8efd1-e328-486a-aed0-dc919d34fb1f.jpg",
+    "fileName": "Текст книги ВиМ.pdf",
+    "fileBook": "1774195336238-49924954-0877-45bb-ad37-f32187b089e6.pdf"
+  },
+  {
+    "id": "fb8bdc3f-b541-40ec-bffb-f7ac0b0070f0",
+    "title": "2 Война и мир - обновление",
+    "description": "Классический роман Льва Толстого о войне 1812 года",
+    "authors": "2 Лев Толстой",
+    "favorite": true,
+    "fileCover": "1774195392328-9ec62059-4231-43b5-ae4f-deaf1d5bd9c3.jpg",
+    "fileName": "Текст книги ВиМ.pdf",
+    "fileBook": "1774195392358-0021d073-121f-4056-8220-cc4a06daf54e.pdf"
+  }
+]

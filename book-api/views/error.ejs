@@ -1,0 +1,10 @@
+<%
+title = title || 'Ошибка';
+%>
+
+<div class="error-page" style="text-align: center; padding: 3rem;">
+    <h1><%= title %></h1>
+    <p style="font-size: 1.2rem; color: #666; margin: 2rem 0;"><%= message %></p>
+    <a href="/" class="btn">Вернуться на главную</a>
+    <a href="/books" class="btn">Перейти к списку книг</a>
+</div>

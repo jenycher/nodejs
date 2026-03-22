@@ -1,0 +1,677 @@
+<%
+title = book.title;
+%>
+
+<div class="book-view-container">
+    <div class="book-view-header">
+        <a href="/books" class="back-link">← Назад к списку</a>
+        <div class="book-actions-top">
+            <a href="/books/<%= book.id %>/edit" class="btn-edit">
+                <span class="btn-icon">✏️</span>
+                Редактировать
+            </a>
+            <form action="/books/<%= book.id %>/delete" method="POST" style="display: inline;">
+                <button type="submit" class="btn-delete" onclick="return confirm('Вы уверены, что хотите удалить книгу «<%= book.title %>»?')">
+                    <span class="btn-icon">🗑️</span>
+                    Удалить
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="book-view-content">
+        <!-- Левая колонка - обложка и файл -->
+        <div class="book-sidebar">
+            <% if (book.fileCover) { %>
+                <div class="cover-container">
+                    <div class="cover-wrapper">
+                        <img src="/public/img/<%= book.fileCover %>" alt="Обложка книги <%= book.title %>" class="book-cover">
+                    </div>
+                    <div class="cover-info">
+                        <span class="cover-label">Обложка</span>
+                        <span class="cover-filename"><%= decodeURIComponent(book.fileCover) %></span>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="no-cover">
+                    <div class="no-cover-icon">📖</div>
+                    <div class="no-cover-text">Обложка отсутствует</div>
+                </div>
+            <% } %>
+            
+            <% if (book.fileBook && fileInfo && fileInfo.exists) { %>
+                <div class="book-file-card">
+                    <div class="file-card-header">
+                        <span class="file-icon">📄</span>
+                        <span>Файл книги</span>
+                    </div>
+                    <div class="file-card-content">
+                        <div class="file-type-badge">
+                            <%= fileInfo.extension %>
+                        </div>
+                        <div class="file-details">
+                            <div class="file-name">
+                                <%= decodeURIComponent(book.fileName || book.fileBook) %>
+                            </div>
+                            <div class="file-meta">
+                                <span class="file-size">📦 <%= fileInfo.size %></span>
+                                <span class="file-date">📅 <%= fileInfo.date %></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="file-card-actions">
+                        <a href="/books/<%= book.id %>/download" class="btn-download">
+                            <span class="btn-icon">📥</span>
+                            Скачать книгу
+                        </a>
+                    </div>
+                </div>
+            <% } else if (book.fileBook && (!fileInfo || !fileInfo.exists)) { %>
+                <div class="no-file-card">
+                    <div class="no-file-icon">⚠️</div>
+                    <div class="no-file-text">Файл книги не найден на сервере</div>
+                </div>
+            <% } else { %>
+                <div class="no-file-card">
+                    <div class="no-file-icon">📚</div>
+                    <div class="no-file-text">Файл книги не загружен</div>
+                </div>
+            <% } %>
+        </div>
+        
+        <!-- Правая колонка - информация о книге -->
+        <div class="book-info">
+            <div class="book-title-section">
+                <h1 class="book-title"><%= book.title %></h1>
+                <% if (book.favorite) { %>
+                    <span class="favorite-badge">
+                        <span class="favorite-star">⭐</span>
+                        Избранное
+                    </span>
+                <% } %>
+            </div>
+            
+            <div class="book-meta">
+                <div class="meta-item">
+                    <span class="meta-icon">✍️</span>
+                    <span class="meta-label">Автор(ы):</span>
+                    <span class="meta-value"><%= book.authors || 'Не указан' %></span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-icon">📅</span>
+                    <span class="meta-label">Добавлена:</span>
+                    <span class="meta-value"><%= addedDate || 'Неизвестно' %></span>
+                </div>
+            </div>
+            
+            <% if (book.description) { %>
+                <div class="book-description">
+                    <h3>📝 Описание</h3>
+                    <div class="description-content">
+                        <%= book.description.replace(/\n/g, '<br>') %>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="no-description">
+                    <span class="no-description-icon">📝</span>
+                    <span>Описание отсутствует</span>
+                </div>
+            <% } %>
+            
+            <div class="book-stats">
+                <div class="stat-item">
+                    <span class="stat-icon">🔖</span>
+                    <span class="stat-label">ID книги:</span>
+                    <span class="stat-value stat-value-mono"><%= book.id %></span>
+                    <button class="copy-id-btn" onclick="copyToClipboard('<%= book.id %>')" title="Скопировать ID">
+                        📋
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Показываем уведомление
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅';
+        setTimeout(() => {
+            btn.textContent = originalText;
+        }, 2000);
+        
+        // Создаем всплывающее уведомление
+        const notification = document.createElement('div');
+        notification.className = 'copy-notification';
+        notification.textContent = 'ID скопирован!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 2000);
+    }).catch(err => {
+        console.error('Ошибка копирования:', err);
+        alert('Не удалось скопировать ID');
+    });
+}
+</script>
+
+<style>
+    .book-view-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 0;
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .book-view-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #667eea;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+    
+    .back-link:hover {
+        color: #764ba2;
+        transform: translateX(-3px);
+    }
+    
+    .book-actions-top {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .btn-edit,
+    .btn-delete {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        background: none;
+    }
+    
+    .btn-edit {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #38a169;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+    }
+    
+    .btn-delete {
+        background: #f56565;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #e53e3e;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
+    }
+    
+    .btn-icon {
+        font-size: 1rem;
+    }
+    
+    .book-view-content {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 2rem;
+    }
+    
+    /* Левая колонка - обложка и файл */
+    .book-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .cover-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        text-align: center;
+    }
+    
+    .cover-wrapper {
+        margin-bottom: 1rem;
+    }
+    
+    .book-cover {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .cover-info {
+        text-align: left;
+        padding-top: 0.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .cover-label {
+        display: block;
+        font-size: 0.75rem;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .cover-filename {
+        font-size: 0.85rem;
+        color: #2d3748;
+        word-break: break-all;
+        font-family: monospace;
+    }
+    
+    .no-cover {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .no-cover-icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .no-cover-text {
+        color: #718096;
+        font-size: 0.9rem;
+    }
+    
+    .book-file-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .file-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .file-icon {
+        font-size: 1.2rem;
+    }
+    
+    .file-card-content {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .file-type-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+    
+    .file-details {
+        flex: 1;
+    }
+    
+    .file-name {
+        font-weight: 500;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        word-break: break-all;
+        font-size: 0.9rem;
+    }
+    
+    .file-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.75rem;
+        color: #718096;
+        flex-wrap: wrap;
+    }
+    
+    .file-size, .file-date {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .file-card-actions {
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .btn-download {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-download:hover {
+        background: #5a67d8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .no-file-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .no-file-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .no-file-text {
+        color: #718096;
+        font-size: 0.9rem;
+    }
+    
+    /* Правая колонка - информация */
+    .book-info {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .book-title-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    
+    .book-title {
+        font-size: 2rem;
+        color: #2d3748;
+        margin: 0;
+        line-height: 1.3;
+    }
+    
+    .favorite-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: #fef3c7;
+        color: #d69e2e;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .favorite-star {
+        font-size: 0.9rem;
+    }
+    
+    .book-meta {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        flex-wrap: wrap;
+    }
+    
+    .meta-item:not(:last-child) {
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .meta-icon {
+        font-size: 1rem;
+    }
+    
+    .meta-label {
+        font-weight: 600;
+        color: #4a5568;
+        min-width: 70px;
+    }
+    
+    .meta-value {
+        color: #2d3748;
+        flex: 1;
+    }
+    
+    .book-description {
+        margin-bottom: 2rem;
+    }
+    
+    .book-description h3 {
+        font-size: 1.2rem;
+        color: #2d3748;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .description-content {
+        color: #4a5568;
+        line-height: 1.6;
+        background: #f7fafc;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .no-description {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        color: #718096;
+        margin-bottom: 2rem;
+    }
+    
+    .no-description-icon {
+        margin-right: 0.5rem;
+    }
+    
+    .book-stats {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-icon {
+        font-size: 0.9rem;
+    }
+    
+    .stat-label {
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.85rem;
+    }
+    
+    .stat-value {
+        color: #718096;
+        font-size: 0.85rem;
+        flex: 1;
+        word-break: break-all;
+    }
+    
+    .stat-value-mono {
+        font-family: monospace;
+        font-size: 0.8rem;
+    }
+    
+    .copy-id-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+        opacity: 0.6;
+    }
+    
+    .copy-id-btn:hover {
+        opacity: 1;
+        background: #e2e8f0;
+        transform: scale(1.1);
+    }
+    
+    .copy-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #48bb78;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        animation: slideIn 0.3s ease-out;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .book-view-content {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .book-view-container {
+            padding: 1rem;
+        }
+        
+        .book-title {
+            font-size: 1.5rem;
+        }
+        
+        .book-view-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .book-actions-top {
+            justify-content: flex-end;
+        }
+        
+        .file-card-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .file-type-badge {
+            white-space: normal;
+        }
+        
+        .meta-item {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .meta-label {
+            min-width: auto;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .book-info {
+            padding: 1rem;
+        }
+        
+        .book-title-section {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .stat-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
