@@ -1,4 +1,3 @@
-```markdown
 # Задание 2 - Environment Variables
 
 ## Цель
