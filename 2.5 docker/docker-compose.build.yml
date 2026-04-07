@@ -1,0 +1,15 @@
+services:
+  storage:
+    image: redis:alpine
+    volumes:
+      - ./data:/data
+
+  counter:
+    build: .
+    environment:
+      - PORT=3002
+      - REDIS_URL=redis://storage
+    ports:
+      - "80:3002"
+    depends_on:
+      - storage

@@ -1,0 +1,21 @@
+services:
+  storage:
+    image: redis:alpine
+    volumes:
+      - ./data:/data
+
+  counter:
+    build: .
+    working_dir: /app
+    volumes:
+      - ./:/app  # монтируем код для hot-reload
+      - /app/node_modules  # сохраняем node_modules в контейнере
+    environment:
+      - PORT=3002
+      - REDIS_URL=redis://storage
+      - NODE_ENV=development
+    ports:
+      - "80:3002"
+    command: npm run dev  # используем dev режим с nodemon
+    depends_on:
+      - storage
