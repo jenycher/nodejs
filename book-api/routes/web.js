@@ -6,6 +6,19 @@ const fs = require('fs');
 const storage = require('../storage');
 const { v4: uuid } = require('uuid');
 
+// ============== ВЫЗОВ МИКРОСЕРВИСА СЧЁТЧИКА ==============
+const COUNTER_SERVICE_URL = process.env.COUNTER_SERVICE_URL || 'http://counter-api:3001';
+
+async function callCounter(bookId, method = 'GET') {
+    const fetch = (await import('node-fetch')).default;
+    const url = method === 'POST' 
+        ? `${COUNTER_SERVICE_URL}/counter/${bookId}/incr`
+        : `${COUNTER_SERVICE_URL}/counter/${bookId}`;
+    
+    const response = await fetch(url, { method });
+    return response.json();
+}
+
 // ============== ВЕБ-МАРШРУТЫ ==============
 
 // Главная страница
@@ -64,11 +77,22 @@ router.post('/books', upload.fields([
 });
 
 // Страница просмотра книги
-router.get('/books/:id', (req, res) => {
+// Страница просмотра книги (ИСПРАВЛЕННЫЙ - с вызовом счётчика)
+router.get('/books/:id', async (req, res) => {
     const { id } = req.params;
     const book = storage.getBookById(id);
     
     if (book) {
+        // Увеличиваем счётчик через микросервис
+        let views = 0;
+        try {
+            await callCounter(id, 'POST');  // увеличиваем
+            const counter = await callCounter(id);  // читаем
+            views = counter.count;
+        } catch (err) {
+            console.error('Counter error:', err.message);
+        }
+        
         // Декодируем имя файла книги
         let decodedFileName = '';
         if (book.fileName) {
@@ -159,6 +183,7 @@ router.get('/books/:id', (req, res) => {
             title: book.title,
             book: {
                 ...book,
+                views: views,
                 displayFileName: decodedFileName,
                 displayCoverName: decodedCoverName
             },

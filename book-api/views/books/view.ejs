@@ -103,6 +103,21 @@ title = book.title;
                     <span class="meta-value"><%= addedDate || 'Неизвестно' %></span>
                 </div>
             </div>
+
+            <!-- ============== НОВЫЙ БЛОК СЧЁТЧИКА ПРОСМОТРОВ ============== -->
+            <div class="counter-card">
+                <div class="counter-header">
+                    <span class="counter-icon">👁️</span>
+                    <span class="counter-title">Просмотры</span>
+                </div>
+                <div class="counter-value" id="counterValue">
+                    <%= book.views !== undefined ? book.views : 0 %>
+                </div>
+                <div class="counter-footer">
+                    <span class="counter-note">Каждый просмотр страницы увеличивает счётчик</span>
+                </div>
+            </div>
+            <!-- ============== КОНЕЦ БЛОКА СЧЁТЧИКА ============== -->
             
             <% if (book.description) { %>
                 <div class="book-description">
@@ -502,6 +517,60 @@ function copyToClipboard(text) {
         color: #2d3748;
         flex: 1;
     }
+
+    /* ============== СТИЛИ ДЛЯ СЧЁТЧИКА ============== */
+    .counter-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: transform 0.2s;
+    }
+    
+    .counter-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .counter-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .counter-icon {
+        font-size: 1.8rem;
+    }
+    
+    .counter-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .counter-value {
+        font-size: 3.5rem;
+        font-weight: bold;
+        color: white;
+        line-height: 1;
+        margin: 0.5rem 0;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .counter-footer {
+        margin-top: 0.5rem;
+    }
+    
+    .counter-note {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    /* ============== КОНЕЦ СТИЛЕЙ СЧЁТЧИКА ============== */
     
     .book-description {
         margin-bottom: 2rem;
@@ -656,6 +725,10 @@ function copyToClipboard(text) {
         
         .meta-label {
             min-width: auto;
+        }
+        
+        .counter-value {
+            font-size: 2.5rem;
         }
     }
     
