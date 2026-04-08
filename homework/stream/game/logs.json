@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2026-04-08T08:00:53.139Z",
+    "result": "win"
+  },
+  {
+    "timestamp": "2026-04-08T08:01:25.593Z",
+    "result": "lose"
+  },
+  {
+    "timestamp": "2026-04-08T08:01:37.781Z",
+    "result": "lose"
+  },
+  {
+    "timestamp": "2026-04-08T08:01:41.272Z",
+    "result": "win"
+  },
+  {
+    "timestamp": "2026-04-08T08:03:21.849Z",
+    "result": "win"
+  },
+  {
+    "timestamp": "2026-04-08T08:03:28.492Z",
+    "result": "win"
+  }
+]
