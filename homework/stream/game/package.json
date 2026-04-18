@@ -1,0 +1,13 @@
+{
+  "name": "coin-toss-game",
+  "version": "1.0.0",
+  "description": "Console game Heads or Tails with log analyzer",
+  "main": "game.js",
+  "scripts": {
+    "start": "node game.js logs.json",
+    "analyze": "node analyzer.js logs.json"
+  },
+  "keywords": ["game", "nodejs", "streams", "fs"],
+  "author": "",
+  "license": "ISC"
+}
